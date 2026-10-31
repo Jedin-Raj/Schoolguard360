@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SCHOOLGUARD 360 — Smart Campus Safety Portal</title>
+    <meta name="description"
+        content="Unified IoT-powered Smart Campus Safety, Biometrics and Command Portal for SCHOOLGUARD 360." />
+    <meta name="theme-color" content="#060d1a" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { fontFamily: { jakarta: ['"Plus Jakarta Sans"', 'sans-serif'] } } }
+        };
+    </script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0
+        }
+
+        html,
+        body {
+            background: #060d1a;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: #f8fafc;
+            overflow-x: hidden
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0a1329
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(6, 182, 212, 0.35);
+            border-radius: 3px
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(6, 182, 212, 0.65)
+        }
+
+        .bg-mesh {
+            background: #060d1a;
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(16, 185, 129, 0.05) 0%, transparent 60%)
+        }
+
+        .glass {
+            background: rgba(17, 28, 56, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 16px
+        }
+
+        .sidebar {
+            width: 260px;
+            min-height: 100vh;
+            background: rgba(10, 19, 41, 0.98);
+            border-right: 1px solid rgba(6, 182, 212, 0.15);
+            display: flex;
+            flex-direction: column;
+            transition: transform .3s ease;
+            z-index: 50
+        }
+
+        @media(max-width:768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                transform: translateX(-100%)
+            }
+
+            .sidebar.open {
+                transform: translateX(0)
+            }
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 40;
+            display: none
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all .2s;
+            border-left: 3px solid transparent
+        }
+
+        .nav-item:hover {
+            background: rgba(6, 182, 212, 0.08);
+            border-left-color: rgba(6, 182, 212, 0.4)
+        }
+
+        .nav-item.active {
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.15), rgba(6, 182, 212, 0.05));
+            border-left-color: #06b6d4
+        }
+
+        .nav-label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8
+        }
+
+        .nav-item.active .nav-label {
+            color: #f8fafc
+        }
+
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            color: #64748b;
+            flex-shrink: 0
+        }
+
+        .nav-item.active .nav-icon {
+            color: #22d3ee
+        }
+
+        .main-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px
+        }
+
+        @media(max-width:640px) {
+            .main-scroll {
+                padding: 16px
+            }
+        }
+
+        .topbar {
+            background: rgba(10, 19, 41, 0.95);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.15);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 30
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .2s;
+            border: none;
+            outline: none
+        }
+
+        .btn-cyan {
+            background: linear-gradient(135deg, #0891b2, #06b6d4);
+            color: #fff;
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.25)
+        }
+
+        .btn-cyan:hover {
+            background: linear-gradient(135deg, #06b6d4, #22d3ee);
+            transform: translateY(-1px)
+        }
+
+        .btn-red {
+            background: linear-gradient(135deg, #b91c1c, #ef4444);
+            color: #fff;
+            border: 1px solid rgba(239, 68, 68, 0.4)
+        }
+
+        .btn-green {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: #fff;
+            border: 1px solid rgba(16, 185, 129, 0.4)
+        }
+
+        .btn-ghost {
+            background: rgba(6, 182, 212, 0.1);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.25)
+        }
+
+        .btn-ghost:hover {
+            background: rgba(6, 182, 212, 0.2)
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.25)
+        }
+
+        .input {
+            background: rgba(6, 13, 26, 0.7);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            color: #f8fafc;
+            border-radius: 10px;
+            padding: 10px 14px;
+            width: 100%;
+            font-size: 14px;
+            outline: none;
+            transition: all .2s
+        }
+
+        .input:focus {
+            border-color: rgba(6, 182, 212, 0.6);
+            box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1)
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase
+        }
+
+        .badge-green {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3)
+        }
+
+        .badge-red {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3)
+        }
+
+        .badge-amber {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3)
+        }
+
+        .badge-cyan {
+            background: rgba(6, 182, 212, 0.15);
+            color: #22d3ee;
+            border: 1px solid rgba(6, 182, 212, 0.3)
+        }
+
+        .badge-purple {
+            background: rgba(139, 92, 246, 0.15);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.3)
+        }
+
+        .badge-sky {
+            background: rgba(14, 165, 233, 0.15);
+            color: #38bdf8;
+            border: 1px solid rgba(14, 165, 233, 0.3)
+        }
+
+        .badge-slate {
+            background: rgba(100, 116, 139, 0.15);
+            color: #94a3b8;
+            border: 1px solid rgba(100, 116, 139, 0.3)
+        }
+
+        .metric-card {
+            background: rgba(17, 28, 56, 0.8);
+            border: 1px solid rgba(6, 182, 212, 0.2);
+            border-radius: 12px;
+            padding: 16px 18px
+        }
+
+        .metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #64748b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 5px
+        }
+
+        .metric-value {
+            font-size: 30px;
+            font-weight: 900;
+            line-height: 1
+        }
+
+        .metric-sub {
+            font-size: 11px;
+            color: #475569;
+            margin-top: 4px
+        }
+
+        .section-hd {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 18px
+        }
+
+        .section-hd-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(6, 182, 212, 0.12);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0
+        }
+
+        .section-hd-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #f8fafc
+        }
+
+        .tbl-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(6, 182, 212, 0.18)
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse
+        }
+
+        thead tr {
+            background: rgba(6, 182, 212, 0.08);
+            border-bottom: 1px solid rgba(6, 182, 212, 0.18)
+        }
+
+        thead th {
+            padding: 11px 15px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #64748b;
+            white-space: nowrap
+        }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(17, 28, 56, 0.8);
+            transition: background .15s
+        }
+
+        tbody tr:hover {
+            background: rgba(6, 182, 212, 0.04)
+        }
+
+        tbody td {
+            padding: 11px 15px;
+            font-size: 13px;
+            white-space: nowrap
+        }
+
+        .ann-card {
+            background: rgba(10, 19, 41, 0.6);
+            border: 1px solid rgba(6, 182, 212, 0.18);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 10px;
+            transition: all .2s
+        }
+
+        .sensor-card {
+            background: rgba(10, 19, 41, 0.7);
+            border: 1px solid rgba(6, 182, 212, 0.18);
+            border-radius: 14px;
+            padding: 20px;
+            transition: all .25s;
+            position: relative
+        }
+
+        .sensor-card.danger {
+            border-color: rgba(239, 68, 68, 0.4)
+        }
+
+        .sensor-card.warning {
+            border-color: rgba(245, 158, 11, 0.4)
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 17px;
+            border-radius: 12px;
+            backdrop-filter: blur(16px);
+            max-width: 380px;
+            font-size: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5)
+        }
+
+        .toast-success {
+            background: rgba(5, 150, 105, 0.9);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #fff
+        }
+
+        .toast-error {
+            background: rgba(185, 28, 28, 0.9);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #fff
+        }
+
+        .toast-warning {
+            background: rgba(146, 64, 14, 0.9);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fff
+        }
+
+        .toast-info {
+            background: rgba(7, 89, 133, 0.9);
+            border: 1px solid rgba(6, 182, 212, 0.5);
+            color: #fff
+        }
+
+        .live-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981
+        }
+
+        .emergency-banner {
+            background: linear-gradient(90deg, rgba(185, 28, 28, .15), rgba(239, 68, 68, .1), rgba(185, 28, 28, .15));
+            border: 1px solid rgba(239, 68, 68, .4);
+            border-radius: 12px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .grid-auto {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 14px
+        }
+
+        .grid-sensor {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px
+        }
+
+        .grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px
+        }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px
+        }
+
+        .modal-box {
+            background: #0c152e;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            border-radius: 18px;
+            padding: 26px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto
+        }
+
+        .step-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 800
+        }
+
+        .step-dot.waiting {
+            background: #111c38;
+            color: #475569;
+            border: 1px solid #1e293b
+        }
+
+        .step-dot.active {
+            background: #06b6d4;
+            color: #041019
+        }
+
+        .step-dot.done {
+            background: #10b981;
+            color: #fff
+        }
+
+        .step-line {
+            height: 2px;
+            flex: 1;
+            background: #1e293b
+        }
+
+        .step-line.done {
+            background: #10b981
+        }
+    </style>
+</head>
+
+<body>
+    <div id="toasts"
+        style="position:fixed;top:18px;right:18px;z-index:9999;display:flex;flex-direction:column;gap:9px;pointer-events:none">
+    </div>
+    <div id="modal-container"></div>
+
+    <!-- ===== LOGIN ===== -->
+    <div id="vLogin" class="min-h-screen flex items-center justify-center p-6 bg-mesh">
+        <div class="glass max-w-md w-full p-8" style="background: rgba(11, 20, 45, 0.95); border-radius: 24px;">
+            <div class="text-center mb-6">
+                <div class="text-2xl font-black tracking-wide">SCHOOLGUARD <span class="text-cyan-400">360</span></div>
+                <div class="text-xs uppercase font-bold text-cyan-500 tracking-widest mt-1">Unified IoT Campus Safety
+                </div>
+            </div>
+            <form onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                    <input id="lUser" class="input" type="text" placeholder="Enter username" />
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Password</label>
+                    <input id="lPass" class="input" type="password" placeholder="Enter password" />
+                </div>
+                <div id="loginErr"
+                    class="hidden mb-4 p-3 bg-red-950/40 border border-red-500/40 text-red-400 rounded-lg text-xs">
+                </div>
+                <button id="loginBtn" type="submit" class="btn btn-cyan w-full py-3 text-sm">Secure Login</button>
+            </form>
+            <div class="mt-6">
+                <div class="text-center text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Quick Demo
+                    Access</div>
+                <div class="grid-3">
+                    <button onclick="quickFill('principal','admin123')"
+                        class="p-2 border border-purple-500/30 bg-purple-500/10 text-purple-300 rounded-lg text-xs font-bold">Principal</button>
+                    <button onclick="quickFill('teacher1','teach123')"
+                        class="p-2 border border-cyan-500/30 bg-cyan-500/10 text-cyan-300 rounded-lg text-xs font-bold">Teacher</button>
+                    <button onclick="quickFill('parent1','parent123')"
+                        class="p-2 border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 rounded-lg text-xs font-bold">Parent</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== PRINCIPAL DASHBOARD ===== -->
+    <div id="vPrincipal" style="display:none;min-height:100vh">
+        <aside id="pSidebar" class="sidebar">
+            <div class="p-4 border-b border-cyan-500/10">
+                <div class="text-base font-black">SCHOOLGUARD <span class="text-cyan-400">360</span></div>
+                <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Command Portal</div>
+            </div>
+            <div class="p-4 border-b border-cyan-500/10 flex items-center gap-3">
+                <div id="pAvatar"
+                    class="w-10 h-10 rounded-full bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center font-bold">
+                    DA</div>
+                <div>
+                    <div id="pName" class="text-xs font-bold">Dr. Abraham Varghese</div>
+                    <div class="text-xs text-cyan-400">Principal</div>
+                </div>
+            </div>
+            <nav id="pNav" class="flex-1 py-2"></nav>
+            <div class="p-4 border-t border-cyan-500/10">
+                <button onclick="logout()" class="btn btn-logout w-full">Logout</button>
+            </div>
+        </aside>
+
+        <div class="flex-1 flex flex-col min-h-screen">
+            <header class="topbar">
+                <div class="text-sm font-black" id="pPageTitle">Campus Overview</div>
+                <div class="flex items-center gap-3">
+                    <button onclick="openEnrollKioskModal()" class="btn btn-cyan text-xs py-1.5 px-3">
+                        <i data-lucide="fingerprint" class="w-3.5 h-3.5"></i> Biometric Enrollment Kiosk
+                    </button>
+                    <button onclick="logout()" class="btn btn-logout text-xs py-1.5 px-3">Logout</button>
+                </div>
+            </header>
+            <main id="pContent" class="main-scroll bg-mesh"></main>
+        </div>
+    </div>
+
+    <!-- ===== TEACHER DASHBOARD ===== -->
+    <div id="vTeacher" style="display:none;min-height:100vh">
+        <aside class="sidebar">
+            <div class="p-4 border-b border-cyan-500/10">
+                <div class="text-base font-black">SCHOOLGUARD <span class="text-cyan-400">360</span></div>
+                <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Teacher Portal</div>
+            </div>
+            <nav id="tNav" class="flex-1 py-2"></nav>
+            <div class="p-4 border-t border-cyan-500/10"><button onclick="logout()"
+                    class="btn btn-logout w-full">Logout</button></div>
+        </aside>
+        <div class="flex-1 flex flex-col min-h-screen">
+            <header class="topbar">
+                <div class="text-sm font-black" id="tPageTitle">Class Attendance</div>
+                <button onclick="logout()" class="btn btn-logout text-xs py-1.5 px-3">Logout</button>
+            </header>
+            <main id="tContent" class="main-scroll bg-mesh"></main>
+        </div>
+    </div>
+
+    <!-- ===== PARENT DASHBOARD ===== -->
+    <div id="vParent" style="display:none;min-height:100vh">
+        <aside class="sidebar">
+            <div class="p-4 border-b border-cyan-500/10">
+                <div class="text-base font-black">SCHOOLGUARD <span class="text-cyan-400">360</span></div>
+                <div class="text-xs text-cyan-400 font-bold uppercase tracking-wider">Parent Portal</div>
+            </div>
+            <nav id="parNav" class="flex-1 py-2"></nav>
+            <div class="p-4 border-t border-cyan-500/10"><button onclick="logout()"
+                    class="btn btn-logout w-full">Logout</button></div>
+        </aside>
+        <div class="flex-1 flex flex-col min-h-screen">
+            <header class="topbar">
+                <div class="text-sm font-black" id="parPageTitle">Child Overview</div>
+                <button onclick="logout()" class="btn btn-logout text-xs py-1.5 px-3">Logout</button>
+            </header>
+            <main id="parContent" class="main-scroll bg-mesh"></main>
+        </div>
+    </div>
+
+    <script>
+        const API = 'https://script.google.com/macros/s/AKfycbwwRzVQDr16tFPC91O4opj0-0x5_kppv4D7osmS88eo4rsUlAIRCznpoEkJql2o7rj9Iw/exec';
+        let G = { user: null, pSec: 'overview', tSec: 'class-att', parSec: 'child-overview' };
+        let kioskPollTimer = null;
+        let lastCreatedCreds = null;
+
+        async function api(params) {
+            const res = await fetch(API + '?' + new URLSearchParams(params).toString(), { method: 'GET', redirect: 'follow' });
+            return await res.json();
+        }
+
+        function toast(msg, type = 'info') {
+            const c = document.getElementById('toasts');
+            const d = document.createElement('div');
+            d.className = `toast toast-${type}`;
+            d.textContent = msg;
+            c.appendChild(d);
+            setTimeout(() => d.remove(), 3500);
+        }
+
+        function todayIST() {
+            return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata' }).format(new Date());
+        }
+
+        function quickFill(u, p) {
+            document.getElementById('lUser').value = u;
+            document.getElementById('lPass').value = p;
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const u = document.getElementById('lUser').value.trim();
+            const p = document.getElementById('lPass').value.trim();
+            const err = document.getElementById('loginErr');
+            try {
+                const data = await api({ action: 'login', username: u, password: p });
+                if (data && data.status === 'SUCCESS') {
+                    G.user = data;
+                    route(data.role);
+                } else {
+                    err.textContent = data.message || 'Invalid username or password.';
+                    err.classList.remove('hidden');
+                }
+            } catch (ex) {
+                err.textContent = 'Server connection error.';
+                err.classList.remove('hidden');
+            }
+        }
+
+        function logout() {
+            G.user = null;
+            document.querySelectorAll('[id^="v"]').forEach(v => v.style.display = 'none');
+            document.getElementById('vLogin').style.display = 'flex';
+        }
+
+        function route(role) {
+            document.querySelectorAll('[id^="v"]').forEach(v => v.style.display = 'none');
+            if (role === 'Principal') { document.getElementById('vPrincipal').style.display = 'flex'; initPrincipal(); }
+            else if (role === 'Teacher') { document.getElementById('vTeacher').style.display = 'flex'; initTeacher(); }
+            else if (role === 'Parent') { document.getElementById('vParent').style.display = 'flex'; initParent(); }
+        }
+
+        /* ─── PRINCIPAL DASHBOARD ─── */
+        const P_NAVS = [
+            { id: 'overview', icon: 'layout-dashboard', label: 'Campus Overview' },
+            { id: 'attendance', icon: 'clipboard-list', label: 'Attendance Master' },
+            { id: 'announcements', icon: 'megaphone', label: 'Announcement Centre' },
+            { id: 'safety', icon: 'shield-alert', label: 'Safety & Bus Telemetry' },
+            { id: 'agriculture', icon: 'leaf', label: 'Smart Agriculture' }
+        ];
+
+        function initPrincipal() {
+            const pN = document.getElementById('pName');
+            if (pN && G.user) pN.textContent = G.user.full_name;
+            buildNav(P_NAVS, G.pSec, 'pNav_go', 'pNav');
+            pNav_go(G.pSec);
+        }
+
+        function pNav_go(sec) {
+            G.pSec = sec;
+            buildNav(P_NAVS, sec, 'pNav_go', 'pNav');
+            const el = document.getElementById('pContent');
+            el.innerHTML = '<div class="p-8 text-center text-slate-500">Loading data…</div>';
+            if (sec === 'overview') pOverview(el);
+            if (sec === 'attendance') pAttendance(el);
+            if (sec === 'safety') pSafety(el);
+        }
+
+        function buildNav(items, activeId, fnStr, navElId) {
+            const el = document.getElementById(navElId);
+            el.innerHTML = items.map(it => `
+                <div class="nav-item ${it.id === activeId ? 'active' : ''}" onclick="${fnStr}('${it.id}')">
+                    <i data-lucide="${it.icon}" class="nav-icon"></i>
+                    <span class="nav-label">${it.label}</span>
+                </div>
+            `).join('');
+            lucide.createIcons({ el });
+        }
+
+        async function pOverview(el) {
+            try {
+                const [att, safety] = await Promise.all([
+                    api({ action: 'get_daily_attendance', date: todayIST(), class_filter: 'All' }),
+                    api({ action: 'get_safety_logs', location: 'All' })
+                ]);
+                el.innerHTML = `
+                    <div class="grid-auto mb-6">
+                        <div class="metric-card"><div class="metric-label">Enrolled</div><div class="metric-value text-cyan-400">${att.total || 0}</div></div>
+                        <div class="metric-card"><div class="metric-label">Present</div><div class="metric-value text-emerald-400">${att.present || 0}</div></div>
+                        <div class="metric-card"><div class="metric-label">Late</div><div class="metric-value text-amber-400">${att.late || 0}</div></div>
+                        <div class="metric-card"><div class="metric-label">Absent</div><div class="metric-value text-red-400">${att.absent || 0}</div></div>
+                    </div>
+                    <div class="grid-sensor mb-6" id="poSens"></div>
+                `;
+                renderSensors(safety, 'poSens');
+            } catch (e) { el.innerHTML = '<div class="p-8 text-center text-red-400">Failed to load overview.</div>'; }
+        }
+
+        function renderSensors(safetyData, targetId) {
+            const el = document.getElementById(targetId);
+            if (!el) return;
+            const logs = Array.isArray(safetyData) ? safetyData : [];
+            const latest = {};
+
+            logs.forEach(l => {
+                const loc = (l.location || '').toLowerCase();
+                const haz = (l.hazard || '').toLowerCase();
+                if (haz.includes('air') || (loc.includes('campus') && !haz.includes('ldr'))) if (!latest['air']) latest['air'] = l;
+                if (haz.includes('flame') || loc.includes('lab')) if (!latest['fire']) latest['fire'] = l;
+                if (loc.includes('bus') || haz.includes('bus')) if (!latest['bus']) latest['bus'] = l;
+                if (haz.includes('light') || haz.includes('ldr') || loc.includes('classroom')) if (!latest['light']) latest['light'] = l;
+            });
+
+            const defs = [
+                { key: 'air', icon: 'wind', title: 'Campus Air Quality', sub: 'MQ-135 Sensor', defVal: 'Normal Air' },
+                { key: 'fire', icon: 'flame', title: 'Lab Fire Sensor', sub: 'Flame Detector', defVal: 'No Flame' },
+                { key: 'bus', icon: 'bus', title: 'School Bus Node', sub: 'Transit Safety', defVal: 'Cabin Safe' },
+                { key: 'light', icon: 'sun', title: 'Classroom Lighting', sub: 'LDR Relay', defVal: 'OFF_Bright' }
+            ];
+
+            el.innerHTML = defs.map(d => {
+                const entry = latest[d.key];
+                const lvl = entry?.level || 'NORMAL';
+                const col = lvl === 'CRITICAL' ? 'text-red-400' : lvl === 'WARNING' ? 'text-amber-400' : 'text-emerald-400';
+                return `
+                    <div class="sensor-card">
+                        <div class="flex justify-between items-center mb-3">
+                            <i data-lucide="${d.icon}" class="w-5 h-5 text-cyan-400"></i>
+                            <span class="badge ${lvl === 'CRITICAL' ? 'badge-red' : lvl === 'WARNING' ? 'badge-amber' : 'badge-green'}">${lvl}</span>
+                        </div>
+                        <div class="text-sm font-bold">${d.title}</div>
+                        <div class="text-xs text-slate-400 mb-2">${d.sub}</div>
+                        <div class="text-xl font-black ${col}">${entry?.value || d.defVal}</div>
+                    </div>
+                `;
+            }).join('');
+            lucide.createIcons({ el });
+        }
+
+        async function pAttendance(el) {
+            const data = await api({ action: 'get_daily_attendance', date: todayIST(), class_filter: 'All' });
+            el.innerHTML = `
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>#</th><th>Student</th><th>Roll No</th><th>Class</th><th>Time</th><th>Status</th></tr></thead>
+                        <tbody>${(data.records || []).map(r => `
+                            <tr><td>${r.serial}</td><td>${r.name}</td><td>${r.roll_no}</td><td>${r.class_name}</td><td>${r.time}</td><td>${r.status}</td></tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        async function pSafety(el) {
+            const data = await api({ action: 'get_safety_logs', location: 'All' });
+            el.innerHTML = `
+                <div class="tbl-wrap">
+                    <table>
+                        <thead><tr><th>Date</th><th>Time</th><th>Location</th><th>Hazard</th><th>Value</th><th>Level</th></tr></thead>
+                        <tbody>${(Array.isArray(data) ? data : []).map(l => `
+                            <tr><td>${l.date}</td><td>${l.time}</td><td>${l.location}</td><td>${l.hazard}</td><td>${l.value}</td><td>${l.level}</td></tr>
+                        `).join('')}</tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        /* ─── INTEGRATED ENROLLMENT KIOSK ─── */
+        async function openEnrollKioskModal() {
+            closeAllModals();
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'enroll-kiosk-modal';
+            modal.innerHTML = `
+                <div class="modal-box" style="max-width: 650px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <div class="text-lg font-bold text-cyan-400">Biometric Hardware Enrollment Terminal</div>
+                        <button onclick="closeModal('enroll-kiosk-modal')" class="text-slate-400 hover:text-white">✕</button>
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-6">
+                        <div class="step-dot waiting" id="kdot-1">1</div>
+                        <div class="step-line" id="kline-1"></div>
+                        <div class="step-dot waiting" id="kdot-2">2</div>
+                        <div class="step-line" id="kline-2"></div>
+                        <div class="step-dot waiting" id="kdot-3">✓</div>
+                    </div>
+
+                    <div id="kstage-form">
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Student Full Name</label>
+                            <input id="kenrName" class="input" placeholder="e.g. Rahul Rajesh" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Roll Number</label>
+                            <input id="kenrRoll" class="input" placeholder="e.g. 10A05" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Class</label>
+                                <input id="kenrClass" class="input" value="10-A" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Parent Username (Auto)</label>
+                                <input id="kenrParent" class="input" placeholder="Leave blank to use roll number" />
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="closeModal('enroll-kiosk-modal')" class="btn btn-ghost flex-1">Cancel</button>
+                            <button onclick="submitKioskEnrollment()" id="btnKioskSend" class="btn btn-cyan flex-1">Queue to ESP32</button>
+                        </div>
+                    </div>
+
+                    <div id="kstage-scan" style="display:none;" class="text-center py-6">
+                        <div class="text-xs uppercase text-slate-400 font-bold mb-1">Target Optical Slot</div>
+                        <div id="kTargetId" class="text-4xl font-black text-cyan-400 mb-3">#—</div>
+                        <p class="text-sm text-slate-300">Scan finger on the physical R307 sensor twice when prompted by the terminal.</p>
+                        <div class="text-xs text-indigo-400 mt-4" id="kScanTxt">Awaiting hardware response…</div>
+                    </div>
+
+                    <div id="kstage-success" style="display:none;" class="text-center py-4">
+                        <div class="text-xl font-bold text-emerald-400 mb-2">Enrollment Verified!</div>
+                        <div class="p-4 bg-slate-900 border border-cyan-500/30 rounded-xl text-left my-4" id="kParentCreds"></div>
+                        <button onclick="closeModal('enroll-kiosk-modal')" class="btn btn-cyan w-full">Done</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal-container').appendChild(modal);
+        }
+
+        async function submitKioskEnrollment() {
+            const name = document.getElementById('kenrName').value.trim();
+            const roll = document.getElementById('kenrRoll').value.trim();
+            const cls = document.getElementById('kenrClass').value.trim();
+            const parent = document.getElementById('kenrParent').value.trim();
+
+            if (!name || !roll) { alert('Name and Roll are required'); return; }
+
+            const btn = document.getElementById('btnKioskSend');
+            btn.disabled = true; btn.textContent = 'Queueing…';
+
+            const res = await api({ action: 'queue_enroll', name, roll_no: roll, class_name: cls, parent_user: parent });
+            if (res.status === 'QUEUED') {
+                lastCreatedCreds = res.parent_creds;
+                document.getElementById('kstage-form').style.display = 'none';
+                document.getElementById('kstage-scan').style.display = 'block';
+                document.getElementById('kTargetId').textContent = '#' + res.target_id;
+                document.getElementById('kdot-1').className = 'step-dot active';
+                pollKioskCommand(res.target_id);
+            }
+        }
+
+        function pollKioskCommand(targetId) {
+            if (kioskPollTimer) clearInterval(kioskPollTimer);
+            kioskPollTimer = setInterval(async () => {
+                const res = await api({ action: 'check_command' });
+                if (res.status === 'IDLE' || (res.target_id && res.target_id !== targetId)) {
+                    clearInterval(kioskPollTimer);
+                    document.getElementById('kdot-1').className = 'step-dot done';
+                    document.getElementById('kdot-2').className = 'step-dot done';
+                    document.getElementById('kdot-3').className = 'step-dot done';
+                    document.getElementById('kstage-scan').style.display = 'none';
+                    document.getElementById('kstage-success').style.display = 'block';
+
+                    const credBox = document.getElementById('kParentCreds');
+                    if (lastCreatedCreds) {
+                        credBox.innerHTML = `
+                            <div class="text-xs font-bold text-cyan-400 mb-1">AUTO-GENERATED PARENT CREDENTIALS</div>
+                            <div class="text-sm">Username: <strong class="text-cyan-300">${lastCreatedCreds.username}</strong></div>
+                            <div class="text-sm">Password: <strong class="text-emerald-300">${lastCreatedCreds.password}</strong></div>
+                        `;
+                    }
+                    confetti({ particleCount: 70, spread: 70 });
+                }
+            }, 1800);
+        }
+
+        function closeModal(id) { const el = document.getElementById(id); if (el) el.remove(); }
+        function closeAllModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.remove()); }
+
+        /* ─── INITIALIZE ─── */
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>
